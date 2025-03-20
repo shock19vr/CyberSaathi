@@ -1220,32 +1220,15 @@ def scrape_cybernews():
             except:
                 pass
 
-"""Main function to run all scrapers"""
-def main():
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Scrape cybersecurity news articles')
-    parser.add_argument('--limit', type=int, default=10, 
-                        help='Maximum number of articles to scrape from each site (default: 10)')
-    parser.add_argument('--sites', nargs='+', choices=['hackernews', 'cybernews', 'all'],
-                        default=['all'], help='Sites to scrape (default: all)')
-    
-    args = parser.parse_args()
-    
-    # Set global variables for article limits
-    global MAX_ARTICLES
-    MAX_ARTICLES = args.limit
-    
-    # Run selected scrapers
-    if 'all' in args.sites or 'hackernews' in args.sites:
-        print(f"=== SCRAPING THE HACKER NEWS (max {MAX_ARTICLES} articles) ===")
-        scrape_hackernews()
-    
-    if 'all' in args.sites or 'cybernews' in args.sites:
-        print(f"=== SCRAPING CYBER NEWS (max {MAX_ARTICLES} articles) ===")
-        scrape_cybernews()
-
 # Define a global variable for max articles
 MAX_ARTICLES = 10
+
+def main():
+    """Run both scrapers with default settings"""
+    print("=== SCRAPING THE HACKER NEWS ===")
+    scrape_hackernews()
+    print("=== SCRAPING CYBER NEWS ===")
+    scrape_cybernews()
 
 # Run the main function if the script is executed directly
 if __name__ == "__main__":

@@ -7,27 +7,33 @@ This system uses Ollama's llama3:8b model to generate cybersecurity tips from ar
 1. **ciso_tips_agent.py** - Generates context-aware security do's and don'ts from cybersecurity articles
 2. **store_tips.py** - Stores the tips in MongoDB organized by date
 3. **query_tips.py** - Retrieves tips from MongoDB by date or article ID
-4. **process_tips.bat** - Windows batch file to automate the entire process
-5. **run_tips_storage.bat** - Windows batch file to run just the storage step
-6. **run_tips_storage.ps1** - PowerShell script to run the storage step
-
-## Setup Notes for Windows
-
-When running scripts in Windows, you may need to use different command formats depending on your shell:
-
-1. **PowerShell**:
-   ```powershell
-   .\script_name.ps1 argument
-   ```
-
-2. **Command Prompt**:
-   ```cmd
-   script_name.bat argument
-   ```
+4. **main.py** - Unified workflow script that includes tips generation and storage
 
 ## Usage
 
-### Generating Tips
+### Using the Unified Workflow (Recommended)
+
+The easiest way to run the entire process:
+
+```bash
+# Run complete workflow from scraping to storage:
+python main.py
+
+# Skip scraping and use existing markdown file:
+python main.py --skip-scrape --input-file cybersecurity_articles.md
+
+# Skip summarization and use existing summary file:
+python main.py --skip-scrape --skip-summaries --summary-file article_summaries.md
+
+# Only generate tips from existing summary file (skip storage):
+python main.py --skip-scrape --skip-summaries --summary-file article_summaries.md --skip-storage
+```
+
+See [Unified Workflow Documentation](README_UNIFIED.md) for more options.
+
+### Individual Component Usage
+
+#### Generating Tips
 
 ```bash
 python ciso_tips_agent.py --input <articles_file.md> --output <tips_output.md>
@@ -38,7 +44,7 @@ Example:
 python ciso_tips_agent.py --input cybersecurity_articles_20250320_184806.md --output ciso_tips_20250320.md
 ```
 
-### Storing Tips in MongoDB
+#### Storing Tips in MongoDB
 
 ```bash
 python store_tips.py --input <tips_file.md>
@@ -49,19 +55,7 @@ Example:
 python store_tips.py --input ciso_tips_20250320_193602.md
 ```
 
-Or use one of the helper scripts:
-
-**Batch file (Command Prompt)**:
-```cmd
-.\run_tips_storage.bat ciso_tips_20250320_193602.md
-```
-
-**PowerShell script**:
-```powershell
-.\run_tips_storage.ps1 ciso_tips_20250320_193602.md
-```
-
-### Querying Tips
+#### Querying Tips
 
 1. List all available dates:
    ```bash
@@ -95,13 +89,6 @@ Or use one of the helper scripts:
    ```bash
    python query_tips.py --id article_3 --output tips_article_3.txt
    ```
-
-### Full Automation
-
-To run the entire process (generate tips and store them in MongoDB), use:
-```bash
-.\process_tips.bat
-```
 
 ## MongoDB Structure
 
