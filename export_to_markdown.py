@@ -18,8 +18,9 @@ from Scraper import generate_encryption_key, decrypt_text, setup_mongodb
 def connect_to_mongodb():
     """Connect to MongoDB and return client and database objects"""
     try:
-        client = pymongo.MongoClient("mongodb://localhost:27017/")
-        db = client["scapper"]
+        # Use the same connection string as in Scraper.py
+        client = pymongo.MongoClient("mongodb+srv://ayushchy012:Chahuta3011@article-db.milce.mongodb.net/")
+        db = client["scraper"]  # Fix the typo: "scapper" -> "scraper"
         return client, db
     except Exception as e:
         print(f"Error connecting to MongoDB: {str(e)}")
@@ -56,16 +57,19 @@ def format_article_to_markdown(article, index):
 
 def export_to_markdown(collections=None, output_file=None, limit=None, include_encrypted=False, decrypt=False):
     """Export articles from MongoDB to a markdown file"""
-    # Connect to MongoDB
-    client, db = connect_to_mongodb()
-    if client is None or db is None:
-        print("Failed to connect to MongoDB. Make sure it's running on localhost:27017")
+    # Connect to MongoDB using the setup function from Scraper.py
+    mongo = setup_mongodb()
+    if mongo is None:
+        print("Failed to connect to MongoDB. Check your connection string.")
         return False
     
     try:
+        client = mongo["client"]
+        db = mongo["db"]
+        
         # Determine which collections to use
         if not collections:
-            collections = db.list_collection_names()
+            collections = ["hackernews", "cybernews"]
         elif isinstance(collections, str):
             collections = [collections]
         
@@ -89,8 +93,8 @@ def export_to_markdown(collections=None, output_file=None, limit=None, include_e
         
         # Process each collection
         for collection_name in collections:
-            if collection_name in db.list_collection_names():
-                collection = db[collection_name]
+            if collection_name in ["hackernews", "cybernews"]:
+                collection = mongo[collection_name]
                 
                 # Get articles with optional limit
                 query = collection.find()
@@ -134,8 +138,8 @@ def export_to_markdown(collections=None, output_file=None, limit=None, include_e
     
     finally:
         # Close MongoDB connection
-        if client:
-            client.close()
+        if mongo and "client" in mongo:
+            mongo["client"].close()
 
 def main():
     """Main function to run the script"""
@@ -155,7 +159,9 @@ def main():
     
     # Determine collections
     collections = None
-    if args.collection != "all":
+    if args.collection == "all":
+        collections = ["hackernews", "cybernews"]
+    else:
         collections = args.collection
     
     # Export to markdown

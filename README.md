@@ -1,224 +1,152 @@
-# Cybersecurity News Scraper
+# CyberSaathi - Cybersecurity Assistant
 
-A Python application that scrapes cybersecurity news articles from multiple sources and stores them in a MongoDB database. The scraper extracts article titles, dates, content, and URLs, and encrypts sensitive information.
+CyberSaathi is an AI-powered cybersecurity assistant that processes security articles, generates summaries, and provides actionable CISO tips for organizations.
 
-## Features
+## System Components
 
-- Scrapes articles from multiple cybersecurity news sources:
-  - The Hacker News
-  - Cyber News
-- Stores articles in MongoDB with deduplication based on:
-  - Article ID (hash of the title)
-  - Normalized title content (for intelligent duplicate detection)
-- Encrypts article titles using Fernet symmetric encryption
-- Generates unique article IDs based on title content
-- Command-line interface for customizing scraping behavior
+### Data Collection
 
-## Installation
+- **Scraper.py**: Scrapes cybersecurity articles from news websites
+- **export_to_markdown.py**: Exports scraped articles to markdown format
 
-### Prerequisites
+### Article Processing
 
-- Python 3.8 or higher
-- MongoDB server running on localhost (default port 27017)
-- Chrome or Chromium browser (for Selenium WebDriver)
-- ChromeDriver compatible with your Chrome/Chromium version
+- **article_summarizer.py**: Summarizes cybersecurity articles from markdown files
+- **article_summaries_*.md**: Output files containing article summaries
 
-### Setup
+### CISO Tips System
 
-1. Clone this repository:
-   ```
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
+- **ciso_tips_agent.py**: Generates actionable security tips from articles
+- **store_tips.py**: Stores tips in MongoDB for easy retrieval
+- **query_tips.py**: Allows querying the tips database by date or article ID
+- **run_tips_storage.bat/ps1**: Helper scripts for storing tips (Windows)
+- **process_tips.bat/ps1**: Full automation script for generating and storing tips
 
-2. Install the required dependencies:
-   ```
+### Unified Pipeline
+
+- **cybersaathi_main.py**: Combines all functionality in a single workflow:
+  1. Web scraping (collects articles)
+  2. Export to markdown
+  3. Article summarization
+  4. CISO tips generation
+  5. MongoDB storage
+- **run.bat**: Simple script to run the complete pipeline
+- **run_cybersaathi.ps1**: PowerShell script to run the complete pipeline
+
+## Detailed Documentation
+
+- [CISO Tips System Documentation](README_TIPS.md)
+
+## Setup Requirements
+
+1. **Python 3.8+**
+2. **MongoDB** (local or Atlas)
+3. **Ollama** with llama3:8b model
+4. **Selenium WebDriver** for web scraping
+5. **Python dependencies**:
+   ```bash
    pip install -r requirements.txt
    ```
 
-3. Ensure MongoDB is running on localhost:
-   ```
-   # On Windows
-   net start MongoDB
-   
-   # On macOS
-   brew services start mongodb-community
-   
-   # On Linux
-   sudo systemctl start mongod
-   ```
+## Quick Start Guide
 
-## Usage
+### Using the Unified Pipeline
 
-Run the scraper using the following command:
-
-```
-python Scraper.py [options]
-```
-
-### Command-line options
-
-- `--limit N`: Maximum number of articles to scrape from each site (default: 10)
-- `--sites [site1 site2 ...]`: Sites to scrape. Options: hackernews, cybernews, all (default: all)
-
-Examples:
-
-```
-# Scrape 5 articles from all supported news sites
-python Scraper.py --limit 5
-
-# Scrape only from The Hacker News
-python Scraper.py --sites hackernews
-
-# Scrape 20 articles from The Hacker News and Cyber News
-python Scraper.py --limit 20 --sites hackernews cybernews
-```
-
-## MongoDB Integration
-
-The scraper stores articles in a MongoDB database named "scapper" with the following collections:
-- `hackernews`: Articles from The Hacker News
-- `cybernews`: Articles from Cyber News
-
-Each article document contains:
-- `_id`: Unique ID generated from the article title (SHA-256 hash)
-- `title`: Original article title
-- `encrypted_title`: Encrypted version of the article title
-- `url`: Article URL
-- `date`: Publication date
-- `tags`: Article tags (if available)
-- `description`: Full article content
-- `source`: Source website (hackernews or cybernews)
-- `scraped_at`: Timestamp when the article was scraped
-
-### Deduplication System
-
-The scraper implements a two-level deduplication system:
-1. **ID-based deduplication**: Prevents adding articles with the same title hash (ID)
-2. **Normalized title deduplication**: Prevents adding articles with similar titles after normalization
-
-This ensures that the database contains only unique articles, even across multiple scraping sessions.
-
-### Accessing the MongoDB Data
-
-You can query the MongoDB database using the MongoDB shell or any MongoDB client:
-
-```
-# Connect to MongoDB shell
-mongo
-
-# Select the database
-use scapper
-
-# Query articles from The Hacker News
-db.hackernews.find()
-
-# Find articles with specific words in the title
-db.hackernews.find({title: /vulnerability/i})
-
-# Count articles from Cyber News
-db.cybernews.countDocuments()
-```
-
-## Encryption
-
-The scraper encrypts article titles using Fernet symmetric encryption with a key derived from PBKDF2. The encrypted titles are stored in MongoDB along with other article data.
-
-To decrypt an encrypted title programmatically:
-
-```python
-from Scraper import decrypt_text, generate_encryption_key
-
-# Generate the same encryption key used for encryption
-key = generate_encryption_key(None)
-
-# Decrypt the encrypted title
-decrypted_title = decrypt_text(encrypted_title, key)
-print(decrypted_title)
-```
-
-## Utility Scripts
-
-The project includes utility scripts:
-
-- **query_articles.py**: Query and view articles from the database with features:
-  - Decrypt encrypted titles for verification
-  - Search for articles by keywords in title or description
-  - Export results to CSV files for analysis
-  - Filter by specific collections (news sources)
-
-- **export_to_markdown.py**: Export articles to a well-formatted Markdown file:
-  - Export all articles or specific collections
-  - Include article metadata (title, date, source, URL)
-  - Include full article content
-  - Option to include decrypted titles
-  - Creates a single Markdown file that can be fed to AI agents
-
-### Using the Query Tool
-
-The query tool provides flexible ways to search and export your article database:
+The simplest way to run the entire CyberSaathi workflow:
 
 ```bash
-# Basic usage - view latest 10 articles
-python query_articles.py
+# Run the complete pipeline from scraping to storage:
+python cybersaathi_main.py
 
-# View only articles from The Hacker News
-python query_articles.py --collection hackernews
-
-# Show articles with decrypted titles
-python query_articles.py --decrypt
-
-# Display up to 20 articles
-python query_articles.py --limit 20
-
-# Search for articles containing specific text in title or description
-python query_articles.py --search "vulnerability"
-
-# Export results to CSV files (creates timestamped files for each collection)
-python query_articles.py --export cybersecurity_articles
-
-# List available collections and document counts
-python query_articles.py --list
-
-# Combine multiple options
-python query_articles.py --collection cybernews --limit 5 --decrypt --search "ransomware" --export ransomware_report
+# Or use existing articles file instead of scraping:
+python cybersaathi_main.py cybersecurity_articles.md
 ```
 
-### Using the Export to Markdown Tool
+For Windows users (recommended):
+```cmd
+# Command Prompt (complete pipeline):
+run.bat
 
-The export tool creates a well-formatted Markdown file from your scraped articles:
+# Use existing articles file:
+run.bat cybersecurity_articles.md
 
-```bash
-# Basic usage - export all articles
-python export_to_markdown.py
-
-# Export only articles from a specific source
-python export_to_markdown.py --collection hackernews
-
-# Export with a custom filename
-python export_to_markdown.py --output cybersecurity_report.md
-
-# Export only 5 articles per collection
-python export_to_markdown.py --limit 5
-
-# Include decrypted titles in the output
-python export_to_markdown.py --decrypt
-
-# Combine multiple options
-python export_to_markdown.py --collection cybernews --limit 10 --output latest_cyber_news.md --decrypt
+# PowerShell option:
+.\run_cybersaathi.ps1
 ```
 
-## Troubleshooting
+Options:
+- `--skip-scraper`: Skip the web scraping step (requires input file)
+- `--skip-summaries`: Skip the article summarization step
+- `--summary-file FILE`: Use an existing summary file instead of generating one
+- `--skip-checks`: Skip dependency checks
 
-- **WebDriver issues**: Ensure you have the correct ChromeDriver version for your Chrome browser.
-- **MongoDB connection errors**: Verify MongoDB is running on localhost port 27017.
-- **Memory errors**: Decrease the `--limit` parameter if you encounter memory issues.
-- **Slow scraping**: The script includes throttling to avoid overloading websites; this is normal.
+### Using Individual Components
 
-## License
+1. **Scrape articles**:
+   ```bash
+   python Scraper.py --limit 10
+   python export_to_markdown.py --output cybersecurity_articles.md
+   ```
 
-[MIT License](LICENSE)
+2. **Process articles**:
+   ```bash
+   python article_summarizer.py --input cybersecurity_articles.md
+   ```
 
-## Disclaimer
+3. **Generate CISO tips**:
+   ```bash
+   python ciso_tips_agent.py --input article_summaries.md --output ciso_tips.md
+   ```
 
-This tool is for educational and research purposes only. Always respect website terms of service and robots.txt directives when scraping. Use responsibly. 
+4. **Store tips in MongoDB**:
+   ```bash
+   python store_tips.py --input ciso_tips.md
+   ```
+
+5. **Query tips**:
+   ```bash
+   python query_tips.py --list
+   python query_tips.py --id article_1
+   ```
+
+## Windows Automation
+
+For Windows users, we provide batch and PowerShell scripts to automate workflows:
+
+```powershell
+# Using PowerShell
+.\run_tips_storage.ps1 ciso_tips.md
+.\process_tips.ps1 article_summaries.md
+
+# Using Command Prompt
+.\run_tips_storage.bat ciso_tips.md
+.\process_tips.bat article_summaries.md
+```
+
+See [CISO Tips Documentation](README_TIPS.md) for detailed Windows usage instructions.
+
+## Project Structure
+
+```
+CyberSaathi/
+├── Scraper.py
+├── export_to_markdown.py
+├── article_summarizer.py
+├── ciso_tips_agent.py
+├── store_tips.py
+├── query_tips.py
+├── cybersaathi_main.py
+├── process_tips.bat
+├── process_tips.ps1
+├── run.bat               <-- Simplest option for complete pipeline
+├── run_cybersaathi.ps1   <-- PowerShell option for complete pipeline
+├── run_tips_storage.bat
+├── run_tips_storage.ps1
+├── README.md
+├── README_TIPS.md
+└── requirements.txt
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. 

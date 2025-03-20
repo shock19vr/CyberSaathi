@@ -33,8 +33,8 @@ sys.stdout.reconfigure(encoding='utf-8') if hasattr(sys.stdout, 'reconfigure') e
 def setup_mongodb():
     """Connect to MongoDB and set up database and collections"""
     try:
-        client = pymongo.MongoClient("mongodb://localhost:27017/")
-        db = client["scapper"]  # Database name as per requirement
+        client = pymongo.MongoClient("mongodb+srv://ayushchy012:Chahuta3011@article-db.milce.mongodb.net/")
+        db = client["scraper"]  # Database name as per requirement
         
         # Create collections for each news source if they don't exist
         hacker_news_collection = db["hackernews"]
